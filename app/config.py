@@ -1,0 +1,5 @@
+SECRET_KEY = 'NOBODY KNOWS WHAT IT IS'
+DATABASE_URL = 'sqlite:///db.sqlite'
+DATABASE_NAME = 'db.sqlite'
+SQLALCHEMY_TRACK_MODIFICATIONS = False
+UPLOAD = 'temp'

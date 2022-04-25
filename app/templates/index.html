@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>ArtLabs</title>
+    <style>
+        body {
+            background-color: rgb(235, 235, 235);
+        }
+
+        .heading {
+            text-align: center;
+            color:rgb(42, 167, 90);
+        }
+
+        .row_1 {
+            display: flex;
+            justify-content: space-around;
+            margin: 10px;
+        }
+
+        .row_2 {
+            display: flex;
+            justify-content: space-around;
+            margin: 10px;
+        }
+
+        button {
+            border: 2px solid rgb(42, 167, 90);
+            border-radius: 4px;
+            font-size: 20px;
+            padding: 5px;
+            background-color: rgb(81, 177, 82);
+            color: rgb(253, 255, 253);
+            width: 30%;
+        }
+
+        button:hover {
+            background-color: rgb(53, 131, 54);
+        }
+
+        input {
+            outline: none;
+            font-size: 20px;
+            padding: 5px;
+            border: none;
+            width: 60%;
+        }
+
+        .table {
+            margin: 10em;
+            padding: 2em;
+            border: 2px solid #d7d6d6;
+            border-radius: 10px;
+            font-size: 20px;
+            text-align: start;
+            background-color: rgb(255, 255, 255);
+            color:rgb(106, 106, 106);
+            margin: 5px;
+            min-width: 1000px;
+            overflow-x: auto;
+        }
+
+        .table .header {
+            display: flex;
+            border: 1px solid #e2e2e2;
+            border-radius: 5px;
+            padding: 2px;
+            margin: 4px;
+        }
+
+        .body {
+            height: 200px;
+            overflow-y: auto;
+        }
+
+        .table .row {
+            display: flex;
+            border-bottom: 1px solid #e2e2e2;
+            padding: 2px;
+            margin: 4px;
+        }
+
+        .table .no {
+            width: 10%;
+        }
+
+        .table .time {
+            width: 25%;
+        }
+
+        .table .link {
+            width: 35%;
+        }
+
+        .table .label {
+            width: 30%;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+</head>
+
+<body>
+    <div class="main">
+        <div class="heading">
+            <h2>Welcome To Checking Assignment</h2>
+            <h4>CNN + Flask</h4>
+
+            <p>{{ greeting }}</p>
+        </div>
+        <div class="controller">
+            <div class="row_1">
+                <input id="image_link" type="text" placeholder="prediction image">
+                <button id="predict_btn" type="button">Predict</button>
+            </div>
+            <div class="row_2">
+                <button id="train_btn" type="button">Train</button>
+                <button id="past_history" type="button">Past Prediction</button>
+                <button id="clear_history" type="button">Clear History</button>
+            </div>
+        </div>
+        <div class="table">
+            <div class="header">
+                <div class="no">No</div>
+                <div class="time">Prediction Time</div>
+                <div class="link">Image Link</div>
+                <div class="label">Image Label</div>
+            </div>
+            <div class="body" id="body">
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    $("#predict_btn").click(function () {
+        image_link = $("#image_link").val();
+        console.log(image_link)
+        if (image_link === "") {
+            alert("Empty Link");
+            return;
+        }
+        $.ajax({
+            type: "GET",
+            url: "/api/predict",
+            contentType: "application/json",
+            data: {
+                "image_link": image_link
+            },
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                //result = JSON.parse(data)
+                alert("success: " + data['prediction']);
+            },
+            error: function (err) {
+                alert(err)
+            }
+        });
+    });
+    $('#train_btn').click(function () {
+        $.ajax({
+            type: "POST",
+            url: "/api/train",
+            async: false,
+            success: function (data) {
+                if (data['success'])
+                    alert('Train is started.')
+                else
+                    alert('Train is failed.')
+            },
+            error: function (err) {
+                alert("Train is failed.")
+            }
+        })
+    });
+    $('#past_history').click(function () {
+        $.ajax({
+            type: "GET",
+            url: '/api/get_past_predictions',
+            async: false,
+            success: function (data) {
+                var node = document.getElementById("body");
+                while (node.firstChild) node.removeChild(node.firstChild)
+                data['predictions'].map((prediction, idx) => {
+                    $(".body").append(`<div class="row">
+                        <div class="no">
+                            ${idx + 1}
+                        </div>
+                        <div class="time">
+                            ${prediction['prediction_time']}
+                        </div>
+                        <div class="link">
+                            ${prediction['image_link']}
+                        </div>
+                        <div class="label">
+                            ${prediction['image_label']}
+                        </div>
+                    </div>`);
+                })
+            },
+            error: function (err) {
+                alert(err)
+            }
+        })
+    });
+    $('#clear_history').click(function () {
+        $.ajax({
+            type: "DELETE",
+            url: "/api/clear_past_predictions",
+            async: false,
+            success: function (data) {
+                var node = document.getElementById("body");
+                while (node.firstChild) node.removeChild(node.firstChild)
+                alert("History is deleted.")
+            },
+            error: function (err) {
+                alert(err)
+            }
+        })
+    });
+</script>
+
+</html>
